@@ -1,9 +1,9 @@
-// Sidenote content script: capture readable page text, selection, and
+// Pageside content script: capture readable page text, selection, and
 // metadata on request from the side panel. Classic (non-module) script —
 // it cannot import lib/*.mjs, which is why redact() mirrors
 // lib/redaction.mjs redactSensitiveText inline.
-const CONTENT_SCRIPT_VERSION = '2026-07-15-sidenote-0.1.0';
-const previousListener = globalThis.__SIDENOTE_CONTENT_LISTENER__;
+const CONTENT_SCRIPT_VERSION = '2026-07-15-pageside-0.1.0';
+const previousListener = globalThis.__PAGESIDE_CONTENT_LISTENER__;
 if (previousListener) {
   try {
     chrome.runtime.onMessage.removeListener(previousListener);
@@ -11,7 +11,7 @@ if (previousListener) {
     // The previous listener can belong to an invalidated extension context after reload.
   }
 }
-globalThis.__SIDENOTE_CONTENT_LOADED__ = CONTENT_SCRIPT_VERSION;
+globalThis.__PAGESIDE_CONTENT_LOADED__ = CONTENT_SCRIPT_VERSION;
 
 const TEXT_LIMITS = {
   minimal: 4_000,
@@ -145,7 +145,7 @@ function collectContext(options = {}) {
 
 const messageListener = (message, _sender, sendResponse) => {
   // Message type must stay in sync with PAGE_CONTEXT_MESSAGE in sidepanel.js.
-  if (message?.type === 'SIDENOTE_GET_CONTEXT') {
+  if (message?.type === 'PAGESIDE_GET_CONTEXT') {
     try {
       sendResponse(collectContext(message.options || {}));
     } catch (error) {
@@ -157,4 +157,4 @@ const messageListener = (message, _sender, sendResponse) => {
 };
 
 chrome.runtime.onMessage.addListener(messageListener);
-globalThis.__SIDENOTE_CONTENT_LISTENER__ = messageListener;
+globalThis.__PAGESIDE_CONTENT_LISTENER__ = messageListener;
