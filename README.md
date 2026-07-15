@@ -6,7 +6,10 @@ A minimal Chrome (Manifest V3) side-panel extension: a chat sidebar about the pa
 
 It is a hard-fork distillation of [hermes-browser-extension](https://github.com/abundantbeing/hermes-browser-extension) by Jon Komet: the page-capture pipeline and its untrusted-content security model are kept nearly intact; the sessions/skills/themes/tools/voice/cloud UI is gone.
 
-<img src="docs/screenshot.png" width="380" alt="Pageside side panel answering a question about the current page" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
+  <img src="docs/screenshot.png" width="380" alt="Pageside side panel answering a question about the current page" />
+</picture>
 
 ## What it does
 
