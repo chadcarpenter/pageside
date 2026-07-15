@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Page Chat",
+  "name": "Sidenote",
   "version": "0.1.0",
   "description": "Chat with any OpenAI-compatible model about the page you're on.",
   "minimum_chrome_version": "114",
@@ -15,8 +15,20 @@
     "http://*/*",
     "https://*/*"
   ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "action": {
-    "default_title": "Open Page Chat"
+    "default_title": "Open Sidenote",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "background": {
     "service_worker": "background.js",
@@ -25,13 +37,6 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
-  "content_scripts": [
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; connect-src http: https:;"
   }

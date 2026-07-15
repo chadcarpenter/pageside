@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Page Chat</title>
+  <title>Sidenote</title>
   <link rel="stylesheet" href="sidepanel.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>Page Chat</h1>
+    <h1>Sidenote</h1>
     <div class="topbar-actions">
       <button id="clear-button" type="button" title="Clear conversation">Clear</button>
       <button id="settings-button" type="button" title="Settings" aria-label="Settings">⚙</button>
@@ -17,8 +17,8 @@
 
   <section id="settings" hidden>
     <label for="setting-base-url">Base URL</label>
-    <input id="setting-base-url" type="url" placeholder="http://127.0.0.1:8642" spellcheck="false" />
-    <p class="hint">OpenAI-compatible server root, without /v1 — e.g. http://127.0.0.1:8642 (Hermes gateway) or http://127.0.0.1:11434 (Ollama).</p>
+    <input id="setting-base-url" type="url" placeholder="http://127.0.0.1:11434" spellcheck="false" />
+    <p class="hint">OpenAI-compatible server root, without /v1 — e.g. http://127.0.0.1:11434 (Ollama) or http://127.0.0.1:1234 (LM Studio).</p>
 
     <label for="setting-api-key">API key</label>
     <input id="setting-api-key" type="password" autocomplete="off" spellcheck="false" />
