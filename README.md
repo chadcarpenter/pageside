@@ -1,4 +1,4 @@
-# Sidenote
+# Pageside
 
 [![CI](https://github.com/chadcarpenter/sidenote/actions/workflows/ci.yml/badge.svg)](https://github.com/chadcarpenter/sidenote/actions/workflows/ci.yml)
 
