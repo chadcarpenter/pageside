@@ -1,6 +1,6 @@
 # Security Policy
 
-Sidenote feeds untrusted web page content into an LLM prompt and renders LLM
+Pageside feeds untrusted web page content into an LLM prompt and renders LLM
 output into extension UI, so its security posture is central to the project.
 Reports about weaknesses in that pipeline are very welcome.
 

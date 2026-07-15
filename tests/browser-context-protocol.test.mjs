@@ -18,7 +18,7 @@ const BASE_SETTINGS = Object.freeze({
 });
 
 test('Browser Context Protocol exports a versioned schema and security posture', () => {
-  assert.equal(BROWSER_CONTEXT_PROTOCOL_ID, 'sidenote.browser.context.v1');
+  assert.equal(BROWSER_CONTEXT_PROTOCOL_ID, 'pageside.browser.context.v1');
   assert.match(BROWSER_CONTEXT_PROTOCOL_SECURITY.untrustedUiRendering, /textContent/i);
   assert.match(BROWSER_CONTEXT_PROTOCOL_SECURITY.untrustedUiRendering, /untrusted/i);
 });

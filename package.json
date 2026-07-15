@@ -1,5 +1,5 @@
 {
-  "name": "sidenote",
+  "name": "pageside",
   "version": "0.1.0",
   "description": "Minimal Chrome MV3 side-panel chat about the current page, for any OpenAI-compatible endpoint.",
   "private": true,
@@ -7,7 +7,7 @@
   "author": "Chad Carpenter",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chadcarpenter/sidenote.git"
+    "url": "git+https://github.com/chadcarpenter/pageside.git"
   },
   "type": "module",
   "scripts": {
