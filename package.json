@@ -12,7 +12,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check:js": "node --check extension/background.js && node --check extension/content.js && node --check extension/sidepanel.js && node --check extension/lib/redaction.mjs && node --check extension/lib/browser-context-protocol.mjs && node --check extension/lib/sse.mjs && node --check extension/lib/markdown.mjs",
+    "check:js": "node --check extension/background.js && node --check extension/content.js && node --check extension/sidepanel.js && node --check extension/lib/redaction.mjs && node --check extension/lib/browser-context-protocol.mjs && node --check extension/lib/sse.mjs && node --check extension/lib/markdown.mjs && node --check extension/lib/profiles.mjs",
     "verify": "npm run test && npm run check:js"
   },
   "engines": {
