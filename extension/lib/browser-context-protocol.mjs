@@ -1,6 +1,6 @@
 import { hasCredentialBearingUrl, redactSensitiveText } from './redaction.mjs';
 
-export const BROWSER_CONTEXT_PROTOCOL_ID = 'pagechat.browser.context.v1';
+export const BROWSER_CONTEXT_PROTOCOL_ID = 'sidenote.browser.context.v1';
 
 export const BROWSER_CONTEXT_PROTOCOL_SECURITY = Object.freeze({
   untrustedUiRendering: 'All Browser Context Protocol strings are untrusted UI data; render them with textContent or a narrowly reviewed escaping renderer at every UI sink.',
