@@ -5,6 +5,7 @@ import {
 } from './lib/browser-context-protocol.mjs';
 import { extractAssistantText, readSseStream } from './lib/sse.mjs';
 import { renderMarkdown } from './lib/markdown.mjs';
+import { DEFAULT_PROFILE_VALUES, getActiveProfile, normalizeSettings } from './lib/profiles.mjs';
 
 // Must stay in sync with the listener in content.js (classic script, no imports).
 const PAGE_CONTEXT_MESSAGE = 'PAGESIDE_GET_CONTEXT';
@@ -18,14 +19,8 @@ const SYSTEM_PROMPT = 'You are a helpful assistant in a browser side panel. Page
 
 const RESTRICTED_REASON = 'Pageside does not read browser internals, extension pages, or sensitive account/payment/password pages.';
 
-const DEFAULT_SETTINGS = Object.freeze({
-  baseUrl: 'http://127.0.0.1:11434',
-  apiKey: '',
-  model: '',
-});
-
 const state = {
-  settings: { ...DEFAULT_SETTINGS },
+  settings: normalizeSettings(undefined),
   messages: [],
   includePageContext: true,
   streaming: false,
@@ -36,6 +31,11 @@ const els = {
   settings: document.getElementById('settings'),
   settingsButton: document.getElementById('settings-button'),
   settingsStatus: document.getElementById('settings-status'),
+  profileSelect: document.getElementById('profile-select'),
+  addProfile: document.getElementById('add-profile'),
+  deleteProfile: document.getElementById('delete-profile'),
+  profileSwitcher: document.getElementById('profile-switcher'),
+  name: document.getElementById('setting-name'),
   baseUrl: document.getElementById('setting-base-url'),
   apiKey: document.getElementById('setting-api-key'),
   model: document.getElementById('setting-model'),
@@ -53,7 +53,9 @@ const els = {
 
 async function loadState() {
   const stored = await chrome.storage.local.get([SETTINGS_KEY, MESSAGES_KEY, INCLUDE_CONTEXT_KEY]);
-  state.settings = { ...DEFAULT_SETTINGS, ...(stored[SETTINGS_KEY] || {}) };
+  state.settings = normalizeSettings(stored[SETTINGS_KEY]);
+  // Upgrade the stored shape once (legacy flat {baseUrl, apiKey, model} or repaired data).
+  if (JSON.stringify(stored[SETTINGS_KEY]) !== JSON.stringify(state.settings)) persistSettings();
   state.messages = Array.isArray(stored[MESSAGES_KEY]) ? stored[MESSAGES_KEY] : [];
   state.includePageContext = stored[INCLUDE_CONTEXT_KEY] !== false;
 }
@@ -68,6 +70,10 @@ function persistSettings() {
 
 function persistIncludeContext() {
   chrome.storage.local.set({ [INCLUDE_CONTEXT_KEY]: state.includePageContext });
+}
+
+function activeProfile() {
+  return getActiveProfile(state.settings);
 }
 
 // ---------- rendering ----------
@@ -104,6 +110,14 @@ function appendMessageNode(message) {
     tag.textContent = `\u{1F4C4} ${message.meta.title || 'page context included'}`;
     wrapper.appendChild(tag);
   }
+  if (message.role === 'assistant' && message.meta?.model && !message.meta?.error) {
+    const tag = document.createElement('div');
+    tag.className = 'model-tag';
+    tag.textContent = message.meta.profileName && message.meta.profileName !== message.meta.model
+      ? `${message.meta.profileName} · ${message.meta.model}`
+      : message.meta.model;
+    wrapper.appendChild(tag);
+  }
   if (message.meta?.stopped) {
     const marker = document.createElement('div');
     marker.className = 'stopped-marker';
@@ -138,11 +152,34 @@ function setStreamingUi(streaming) {
 
 // ---------- settings UI ----------
 
+function renderProfileSelectors() {
+  const { profiles, activeProfileId } = state.settings;
+  for (const select of [els.profileSelect, els.profileSwitcher]) {
+    select.textContent = '';
+    for (const profile of profiles) {
+      const option = document.createElement('option');
+      option.value = profile.id;
+      option.textContent = profile.name;
+      select.appendChild(option);
+    }
+    select.value = activeProfileId;
+  }
+  els.profileSwitcher.hidden = profiles.length < 2;
+  els.deleteProfile.disabled = profiles.length < 2;
+}
+
+function loadProfileIntoForm() {
+  const profile = activeProfile();
+  els.name.value = profile.name;
+  els.baseUrl.value = profile.baseUrl;
+  els.apiKey.value = profile.apiKey;
+  els.model.value = profile.model;
+}
+
 function openSettings(statusText = '') {
   els.settings.hidden = false;
-  els.baseUrl.value = state.settings.baseUrl;
-  els.apiKey.value = state.settings.apiKey;
-  els.model.value = state.settings.model;
+  renderProfileSelectors();
+  loadProfileIntoForm();
   els.settingsStatus.textContent = statusText;
 }
 
@@ -154,14 +191,46 @@ function toggleSettings() {
   }
 }
 
-function saveSettings() {
-  state.settings = {
-    baseUrl: els.baseUrl.value.trim() || DEFAULT_SETTINGS.baseUrl,
-    apiKey: els.apiKey.value.trim(),
-    model: els.model.value.trim(),
-  };
+function setActiveProfile(id) {
+  if (!state.settings.profiles.some((profile) => profile.id === id)) return;
+  state.settings.activeProfileId = id;
   persistSettings();
-  if (!state.settings.model) {
+  renderProfileSelectors();
+  if (!els.settings.hidden) {
+    loadProfileIntoForm();
+    els.settingsStatus.textContent = '';
+  }
+}
+
+function addProfile() {
+  const profile = {
+    id: crypto.randomUUID(),
+    name: `Profile ${state.settings.profiles.length + 1}`,
+    ...DEFAULT_PROFILE_VALUES,
+  };
+  state.settings.profiles.push(profile);
+  setActiveProfile(profile.id);
+  els.name.focus();
+  els.name.select();
+}
+
+function deleteProfile() {
+  const { profiles, activeProfileId } = state.settings;
+  if (profiles.length < 2) return;
+  state.settings.profiles = profiles.filter((profile) => profile.id !== activeProfileId);
+  setActiveProfile(state.settings.profiles[0].id);
+}
+
+function saveSettings() {
+  const profile = activeProfile();
+  profile.name = els.name.value.trim() || profile.name;
+  profile.baseUrl = els.baseUrl.value.trim() || DEFAULT_PROFILE_VALUES.baseUrl;
+  profile.apiKey = els.apiKey.value.trim();
+  profile.model = els.model.value.trim();
+  persistSettings();
+  renderProfileSelectors();
+  loadProfileIntoForm();
+  if (!profile.model) {
     els.settingsStatus.textContent = 'Saved. Add a model name to start chatting.';
     return;
   }
@@ -376,7 +445,7 @@ async function refreshContextHint() {
 function apiRoot(baseUrl = '') {
   let root = String(baseUrl || '').trim().replace(/\/+$/, '');
   if (root.toLowerCase().endsWith('/v1')) root = root.slice(0, -3).replace(/\/+$/, '');
-  return root || DEFAULT_SETTINGS.baseUrl;
+  return root || DEFAULT_PROFILE_VALUES.baseUrl;
 }
 
 function buildApiMessages(finalPrompt) {
@@ -416,11 +485,11 @@ async function httpError(response) {
   return new Error(`Request failed (HTTP ${response.status})${detail ? `: ${detail}` : ''}`);
 }
 
-function friendlyError(error) {
+function friendlyError(error, profile) {
   if (error instanceof TypeError) {
-    let origin = state.settings.baseUrl;
+    let origin = profile.baseUrl;
     try {
-      origin = new URL(apiRoot(state.settings.baseUrl)).origin;
+      origin = new URL(apiRoot(profile.baseUrl)).origin;
     } catch {
       // keep raw baseUrl
     }
@@ -453,7 +522,9 @@ async function buildFinalPrompt(userText) {
 async function sendPrompt(userText) {
   const text = userText.trim();
   if (!text || state.streaming) return;
-  if (!state.settings.model) {
+  // Snapshot the profile at send time so a mid-stream switch can't affect this request.
+  const profile = activeProfile();
+  if (!profile.model) {
     openSettings('Set a model name to start chatting.');
     return;
   }
@@ -472,7 +543,7 @@ async function sendPrompt(userText) {
   scrollToBottom();
 
   const apiMessages = buildApiMessages(prepared.finalPrompt);
-  const assistant = { role: 'assistant', content: '', meta: {} };
+  const assistant = { role: 'assistant', content: '', meta: { model: profile.model, profileName: profile.name } };
   state.messages.push(assistant);
   const { wrapper, body } = appendMessageNode(assistant);
   wrapper.classList.add('streaming');
@@ -484,12 +555,12 @@ async function sendPrompt(userText) {
   try {
     const headers = {
       'Content-Type': 'application/json',
-      ...(state.settings.apiKey ? { Authorization: `Bearer ${state.settings.apiKey}` } : {}),
+      ...(profile.apiKey ? { Authorization: `Bearer ${profile.apiKey}` } : {}),
     };
-    const response = await fetch(`${apiRoot(state.settings.baseUrl)}/v1/chat/completions`, {
+    const response = await fetch(`${apiRoot(profile.baseUrl)}/v1/chat/completions`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ model: state.settings.model, messages: apiMessages, stream: true }),
+      body: JSON.stringify({ model: profile.model, messages: apiMessages, stream: true }),
       signal: state.abortController.signal,
     });
     if (!response.ok) throw await httpError(response);
@@ -518,9 +589,13 @@ async function sendPrompt(userText) {
       wrapper.appendChild(marker);
     } else {
       assistant.meta.error = true;
-      assistant.content = friendlyError(error);
+      assistant.content = friendlyError(error, profile);
       wrapper.classList.add('error');
       body.textContent = assistant.content;
+      // The error text wasn't produced by the model; drop the profile stamp.
+      delete assistant.meta.model;
+      delete assistant.meta.profileName;
+      wrapper.querySelector('.model-tag')?.remove();
     }
   } finally {
     wrapper.classList.remove('streaming');
@@ -568,6 +643,10 @@ function wireEvents() {
 
   els.settingsButton.addEventListener('click', toggleSettings);
   els.saveSettings.addEventListener('click', saveSettings);
+  els.profileSelect.addEventListener('change', () => setActiveProfile(els.profileSelect.value));
+  els.profileSwitcher.addEventListener('change', () => setActiveProfile(els.profileSwitcher.value));
+  els.addProfile.addEventListener('click', addProfile);
+  els.deleteProfile.addEventListener('click', deleteProfile);
 
   chrome.tabs.onActivated.addListener(() => refreshContextHint());
   chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
@@ -579,8 +658,9 @@ async function init() {
   await loadState();
   els.includeContext.checked = state.includePageContext;
   renderTranscript();
+  renderProfileSelectors();
   wireEvents();
-  if (!state.settings.model) openSettings('Set your endpoint and model to get started.');
+  if (!activeProfile().model) openSettings('Set your endpoint and model to get started.');
   refreshContextHint();
   els.prompt.focus();
 }

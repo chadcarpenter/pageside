@@ -91,7 +91,8 @@ button:hover {
   margin: 8px 0 2px;
 }
 
-#settings input {
+#settings input,
+#settings select {
   width: 100%;
   font: inherit;
   color: var(--fg);
@@ -99,6 +100,26 @@ button:hover {
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 6px 8px;
+}
+
+.profile-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.profile-row select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.profile-row button {
+  flex: 0 0 auto;
+}
+
+.profile-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .hint {
@@ -198,6 +219,12 @@ button:hover {
   margin-top: 4px;
 }
 
+.message.assistant .model-tag {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
 .stopped-marker {
   font-size: 11px;
   color: var(--muted);
@@ -248,6 +275,17 @@ button:hover {
 
 #context-hint {
   font-style: italic;
+}
+
+#profile-switcher {
+  margin-left: auto;
+  max-width: 45%;
+  font-size: 12px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 4px;
 }
 
 #composer {

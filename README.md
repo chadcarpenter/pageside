@@ -31,7 +31,9 @@ Found a weakness in any of this? See [SECURITY.md](SECURITY.md).
 
 1. Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select this repo's `extension/` folder.
 2. Click the Pageside toolbar button — the side panel opens and settings appear on first run.
-3. Set **Base URL**, **API key** (blank if the server needs none), and **Model**.
+3. Set **Base URL**, **API key** (blank if the server needs none), and **Model**. These live in a named endpoint profile (the first one is called "Default"; a previously saved endpoint is migrated into it on upgrade).
+
+Use **Add**/**Delete** in settings to keep one profile per endpoint (e.g. a Hermes gateway and a plain Ollama server). Once you have more than one, a compact switcher appears in the composer footer — switching profiles changes the endpoint/model for subsequent messages without touching the conversation.
 
 While developing, load it in a dedicated Chrome profile to keep it isolated from your daily-driver profile.
 

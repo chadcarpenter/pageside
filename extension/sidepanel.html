@@ -16,6 +16,16 @@
   </header>
 
   <section id="settings" hidden>
+    <label for="profile-select">Profile</label>
+    <div class="profile-row">
+      <select id="profile-select"></select>
+      <button id="add-profile" type="button" title="Add profile">Add</button>
+      <button id="delete-profile" type="button" title="Delete profile">Delete</button>
+    </div>
+
+    <label for="setting-name">Name</label>
+    <input id="setting-name" type="text" placeholder="e.g. Ollama" spellcheck="false" />
+
     <label for="setting-base-url">Base URL</label>
     <input id="setting-base-url" type="url" placeholder="http://127.0.0.1:11434" spellcheck="false" />
     <p class="hint">OpenAI-compatible server root, without /v1 — e.g. http://127.0.0.1:11434 (Ollama) or http://127.0.0.1:1234 (LM Studio).</p>
@@ -42,6 +52,7 @@
         Include page context
       </label>
       <span id="context-hint" hidden></span>
+      <select id="profile-switcher" title="Active endpoint profile" aria-label="Active endpoint profile" hidden></select>
     </div>
     <form id="composer">
       <textarea id="prompt" rows="3" placeholder="Ask about this page…"></textarea>
